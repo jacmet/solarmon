@@ -1,0 +1,72 @@
+#!/bin/sh
+
+# database to use
+RRD=/home/peko/solar2.rrd
+RRD2=/home/peko/solar3.rrd
+WEB=/var/www/rrd
+LOG=/home/peko/solar.log
+GET=/home/peko/bin/solarget
+GRAPH=$(cat <<EOF
+--slope-mode
+DEF:a=$RRD:a:AVERAGE DEF:b=$RRD:b:AVERAGE CDEF:sum=a,b,+
+AREA:a#FF0000:A LINE2:a#800000
+AREA:b#00FF00:B:STACK LINE2:sum#008000
+EOF
+)
+
+# create
+case "$1" in
+    create)
+	# 7KW max, 1 day with 5min resolution, 1 week with 30min,
+	# 1 month with 2hour and 5 years with 1 day resolution
+	rrdtool create $RRD \
+	    DS:a:GAUGE:1200:0:7000 DS:b:GAUGE:1200:0:7000 \
+	    RRA:AVERAGE:0.5:1:288 \
+	    RRA:AVERAGE:0.5:6:336 \
+	    RRA:AVERAGE:0.5:24:372 \
+	    RRA:AVERAGE:0.5:228:1825
+	;;
+
+    *)
+	# previous sample
+	eval $(tail -n 1 $LOG | cut -f2- -d' ')
+	an=$($GET /dev/ttyUSB? a)
+	bn=$($GET /dev/ttyUSB? b)
+	date=$(date +%F-%T)
+	echo "$date a=$an b=$bn" >> $LOG
+	# solarmon counts in 0.5 watthour - we sample every 5 min
+	# so current average production in watt is W=(c(x) - c(x-1))*6
+	a=$(( ( $an - $a ) * 12 ))
+	b=$(( ( $bn - $b ) * 12 ))
+
+	rrdtool update $RRD N:$a:$b
+	rrdtool update $RRD2 N:$a:$b
+
+	# daily
+	rrdtool graph $WEB/day.png \
+ 	    --end now --start end-1d --width 700 --height 400 \
+ 	    $GRAPH >/dev/null
+	# weekly
+	rrdtool graph $WEB/week.png \
+ 	    --end now --start end-1w --width 700 --height 400 \
+ 	    $GRAPH >/dev/null
+
+	rrdtool graph $WEB/week2.png \
+ 	    --end now --start end-1w --width 700 --height 400 \
+	    --slope-mode \
+	    DEF:a=$RRD2:a:AVERAGE DEF:b=$RRD2:b:AVERAGE CDEF:sum=a,b,+ \
+	    AREA:a#FF0000:A LINE2:a#800000 \
+	    AREA:b#00FF00:B:STACK LINE2:sum#008000 >/dev/null
+
+	# monthly
+	rrdtool graph $WEB/month.png \
+ 	    --end now --start end-1month --width 700 --height 400 \
+ 	    $GRAPH >/dev/null
+	# yearly
+	rrdtool graph $WEB/year.png \
+ 	    --end now --start end-1year --width 700 --height 400 \
+ 	    $GRAPH >/dev/null
+
+	;;
+esac
+ 
