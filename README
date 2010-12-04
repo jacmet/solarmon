@@ -1,0 +1,16 @@
+Electricity monitoring of solar PV installation using kWh meter
+---------------------------------------------------------------
+
+(C) 2010 Peter Korsgaard <peter@korsgaard.com>
+
+This package contains AVR firmware and corresponding PC scripts to
+monitor solar PV installations through kWh meters with an isolated S0
+output.
+
+It works as follows: The kWh meter sends a pulse on it's output every
+N watthours, which is detected by the AVR. The AVR provides as simple
+serial protocol to read out the amount of pulses detected, which is
+used by the PC SW to draw graphs of the electricity production using
+RRDtool.
+
+Released under the GPL license.
