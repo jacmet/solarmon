@@ -1,9 +1,17 @@
 #!/bin/sh
+#
+# (C) 2010 Peter Korsgaard <peter@korsgaard.com>
+#
+# Shell script to monitor solar PV installation electricity production and
+# make graphs with rrdtool.
+#
+# Is meant to run from cron(8) every 5 minutes, E.G. using something like:
+# */5 * * * * /home/peko/bin/solarmon log
 
 # database to use
 RRD=/home/peko/solar.rrd
-WEB=/var/www/rrd
 LOG=/home/peko/solar.log
+WEB=/var/www/rrd
 GET='solarget /dev/ttyUSB?'
 GRAPH=$(cat <<EOF
 --slope-mode
