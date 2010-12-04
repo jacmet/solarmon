@@ -34,8 +34,8 @@ case "$1" in
 	bn=$($GET /dev/ttyUSB? b)
 	date=$(date +%F-%T)
 	echo "$date a=$an b=$bn" >> $LOG
-	# solarmon counts in 0.5 watthour - we sample every 5 min
-	# so current average production in watt is W=(c(x) - c(x-1))*6
+	# solarget counts in watthours - we sample every 5 min
+	# so current average production in watt is W=(c(x) - c(x-1))*12
 	a=$(( ( $an - $a ) * 12 ))
 	b=$(( ( $bn - $b ) * 12 ))
 
@@ -69,4 +69,3 @@ case "$1" in
 
 	;;
 esac
- 
