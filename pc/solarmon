@@ -1,11 +1,10 @@
 #!/bin/sh
 
 # database to use
-RRD=/home/peko/solar2.rrd
-RRD2=/home/peko/solar3.rrd
+RRD=/home/peko/solar.rrd
 WEB=/var/www/rrd
 LOG=/home/peko/solar.log
-GET=/home/peko/bin/solarget
+GET='solarget /dev/ttyUSB?'
 GRAPH=$(cat <<EOF
 --slope-mode
 DEF:a=$RRD:a:AVERAGE DEF:b=$RRD:b:AVERAGE CDEF:sum=a,b,+
@@ -30,8 +29,8 @@ case "$1" in
     log)
 	# previous sample
 	eval $(tail -n 1 $LOG | cut -f2- -d' ')
-	an=$($GET /dev/ttyUSB? a)
-	bn=$($GET /dev/ttyUSB? b)
+	an=$($GET a)
+	bn=$($GET b)
 	date=$(date +%F-%T)
 	echo "$date a=$an b=$bn" >> $LOG
 	# solarget counts in watthours - we sample every 5 min
@@ -40,7 +39,6 @@ case "$1" in
 	b=$(( ( $bn - $b ) * 12 ))
 
 	rrdtool update $RRD N:$a:$b
-	rrdtool update $RRD2 N:$a:$b
 
 	# daily
 	rrdtool graph $WEB/day.png \
@@ -50,13 +48,6 @@ case "$1" in
 	rrdtool graph $WEB/week.png \
  	    --end now --start end-1w --width 700 --height 400 \
  	    $GRAPH >/dev/null
-
-	rrdtool graph $WEB/week2.png \
- 	    --end now --start end-1w --width 700 --height 400 \
-	    --slope-mode \
-	    DEF:a=$RRD2:a:AVERAGE DEF:b=$RRD2:b:AVERAGE CDEF:sum=a,b,+ \
-	    AREA:a#FF0000:A LINE2:a#800000 \
-	    AREA:b#00FF00:B:STACK LINE2:sum#008000 >/dev/null
 
 	# monthly
 	rrdtool graph $WEB/month.png \
