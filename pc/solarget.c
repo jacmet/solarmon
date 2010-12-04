@@ -21,6 +21,7 @@
 #include <fcntl.h>
 
 #define SPEED B9600
+#define TEXTLEN 12 /* length in bytes of reply msg */
 
 static void writel(int fd, const char *s)
 {
@@ -106,12 +107,38 @@ int main(int argc, char **argv)
 		writel(fd, buf);
 		readl(fd, buf, sizeof(buf));
 
-		if (strlen(buf) == 12)
-			break;
-		/* todo: check cksum */
+		if (strlen(buf) == TEXTLEN) {
+			char *endp;
+			long val;
+			int i, sum;
+
+			/* skip (a|b)= */
+			val = strtol(&buf[2], &endp, 16);
+			if (*endp) {
+				fprintf(stderr, "invalid number '%s'\n", buf);
+				continue;
+			}
+
+			/* cksum only over the number part (not a|b= or crc) */
+			for (sum=0, i=2; i<(TEXTLEN-2); i++)
+				sum += buf[i];
+
+			if ((sum & 0xff) != (val & 0xff)) {
+				fprintf(stderr,
+					"invalid crc (0x%02x vs 0x%02x)\n",
+					(sum & 0xff), (int)(val & 0xff));
+				continue;
+			}
+
+			/* strip cksum */
+			val >>= 8;
+
+			/* 2 pulses / watt-hour */
+			printf("%ld\n", val/2);
+
+			return 0;
+		}
 	}
 
-	buf[10] = 0;
-	printf("%ld\n", strtol(&buf[2], 0, 16)/2);
 	return 0;
 }
