@@ -22,6 +22,7 @@
 
 #define SPEED B9600
 #define TEXTLEN 12 /* length in bytes of reply msg */
+#define MAXTRIES 10
 
 static void writel(int fd, const char *s)
 {
@@ -78,7 +79,7 @@ int main(int argc, char **argv)
 {
 	struct termios oldts, ts;
 	char buf[256];
-	int fd;
+	int fd, tries = MAXTRIES;
 
 	if (argc < 3) {
 		fprintf(stderr, "argument missing - %s <device>\n",
@@ -100,7 +101,7 @@ int main(int argc, char **argv)
 	cfsetspeed(&ts, SPEED);
 	tcsetattr(fd, TCSAFLUSH, &ts);
 
-	while (1) {
+	while (tries--) {
 		buf[0] = argv[2][0];
 		buf[1] = '\n';
 		buf[2] = 0;
