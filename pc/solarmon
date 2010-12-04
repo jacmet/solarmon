@@ -27,7 +27,7 @@ case "$1" in
 	    RRA:AVERAGE:0.5:228:1825
 	;;
 
-    *)
+    log)
 	# previous sample
 	eval $(tail -n 1 $LOG | cut -f2- -d' ')
 	an=$($GET /dev/ttyUSB? a)
@@ -66,6 +66,11 @@ case "$1" in
 	rrdtool graph $WEB/year.png \
  	    --end now --start end-1year --width 700 --height 400 \
  	    $GRAPH >/dev/null
+	;;
 
+    *)
+	echo "Monitor solar PV installation production and generate graphs"
+	echo "Usage: $0 {create|log}" >&2
+	exit 1
 	;;
 esac
