@@ -1,3 +1,5 @@
+CFLAGS += -Wall -Os -s
+
 all: solarget
 
 clean:

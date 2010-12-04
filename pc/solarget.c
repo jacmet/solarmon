@@ -24,7 +24,6 @@
 
 static void writel(int fd, const char *s)
 {
-	char buf[256];
 	int len = strlen(s);
 
 	while (len) {
