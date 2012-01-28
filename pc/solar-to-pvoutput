@@ -28,5 +28,5 @@ date=$(echo $d|awk -F- '{ print $1$2$3 }')
 time=$(echo $d|awk -F- '{ split($4, t, ":"); print t[1] ":" t[2] }')
 
 echo -ne "$date $time submitting $sum:\t"
-curl -d "d=$date" -d "t=$time" -d "v1=$sum" -d "c1=1" \
+curl -s -d "d=$date" -d "t=$time" -d "v1=$sum" -d "c1=1" \
     -H "X-Pvoutput-Apikey: $APIKEY" -H "X-Pvoutput-SystemId: $SYSID" $URL
