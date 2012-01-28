@@ -1,0 +1,32 @@
+#!/bin/sh
+#
+# (C) 2012 Peter Korsgaard <peter@korsgaard.com>
+#
+# Shell script read out latest solarmon update and post to pvoutput.org
+#
+# Is meant to run from cron(8) every 5 minutes, E.G. using something like:
+# */5 * * * * /home/<user>/bin/solar-to-pvoutput >>~/pvoutput.log
+
+LOG=~/solar.log
+
+# pvoutput identitiers
+APIKEY=<your-pvoutput-abikey>
+SYSID=<your-pvoutput-system-id>
+URL=http://pvoutput.org/service/r2/addstatus.jsp
+
+# Solarget adjustments if any. Perhaps avr hasn't measured since the
+# very beginning. If so, add the number of watthours to add to the logged
+# data before posting to pvoutput.
+A_OFFSET=<your-a-offset>
+B_OFFSET=<your-b-offset>
+
+# d=date, a=gsta (watthours) b=gstb (watthours)
+eval $(echo -n 'd='; tail -n 1 $LOG)
+
+sum=$(( $a + $A_OFFSET + $b + $B_OFFSET ))
+date=$(echo $d|awk -F- '{ print $1$2$3 }')
+time=$(echo $d|awk -F- '{ split($4, t, ":"); print t[1] ":" t[2] }')
+
+echo -ne "$date $time submitting $sum:\t"
+curl -d "d=$date" -d "t=$time" -d "v1=$sum" -d "c1=1" \
+    -H "X-Pvoutput-Apikey: $APIKEY" -H "X-Pvoutput-SystemId: $SYSID" $URL
