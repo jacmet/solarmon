@@ -1,0 +1,45 @@
+#!/bin/sh
+#
+# (C) 2012 Peter Korsgaard <peter@korsgaard.com>
+#
+# Shell script to monitor pvoutput log and notify per email if a new
+# 1000 KWh certificate is earned
+#
+# Is meant to run from cron(8) once a day, E.G. using something like:
+# */5 * * * * /home/<user>/bin/solar-notify-green
+
+# email address to send notifications to
+EMAIL=peter@korsgaard.com
+
+# pvoutput logfile to use
+LOG=~/.pvoutput.log
+
+# log file containing amount of certificates handled
+CURLOG=~/.green.log
+
+# number of Wh's per certificate
+CERTIFICATE=1000000
+
+# number of certificates earned
+NR=$(tail -n 1 $LOG | awk "{ print int(\$4 / $CERTIFICATE) }")
+
+# number of certificates handled
+CUR=$(cat $CURLOG)
+CUR=${CUR:-0}
+
+if [ "$NR" != "$CUR" ];
+then
+    echo "$NR" > $CURLOG
+
+    (
+	echo -e "Hi,\n"
+	echo "Congratulations, you have now earned $NR green certificates."
+	cat <<EOF
+Don't forget to request the premium.
+
+--
+Greetings,
+Your solar panel robot.
+EOF
+    ) | mail -s "$NR green certificates earned" $EMAIL
+fi
