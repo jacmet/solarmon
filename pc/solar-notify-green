@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # (C) 2012 Peter Korsgaard <peter@korsgaard.com>
 #
@@ -9,7 +9,7 @@
 # */5 * * * * /home/<user>/bin/solar-notify-green
 
 # email address to send notifications to
-EMAIL=peter@korsgaard.com
+EMAIL='peter@korsgaard.com evelyne@korsgaard.com'
 
 # pvoutput logfile to use
 LOG=~/.pvoutput.log
@@ -35,7 +35,9 @@ then
 	echo -e "Hi,\n"
 	echo "Congratulations, you have now earned $NR green certificates."
 	cat <<EOF
-Don't forget to request the premium.
+Don't forget to request the premium at:
+
+https://certificatenbeheer.vreg.be/ContentPages/MeterReadingAdd.aspx
 
 --
 Greetings,
